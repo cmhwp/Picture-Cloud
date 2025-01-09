@@ -1,0 +1,36 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: PCloud-backend
+    #数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306
+    username: root
+    password: 123456
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
+    #仅在开发时打印日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      # 逻辑删除
+      logic-delete-field: isDelete
+      logic-not-delete-value: 1
+knife4j:
+  enable: true
+  openapi:
+    title: PCloud
+    version: v1.0
+    license: Apache 2.0
+    license-url: https://stackoverflow.com/
+    terms-of-service-url: https://stackoverflow.com/
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.photo.pcloudbackend.controller
