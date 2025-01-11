@@ -1,5 +1,5 @@
 import { h } from 'vue'
-import { HomeOutlined, AppstoreOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, AppstoreOutlined, UserOutlined } from '@ant-design/icons-vue'
 import type { MenuItem } from '@/types/menu'
 
 export const menuItems: MenuItem[] = [
@@ -14,6 +14,12 @@ export const menuItems: MenuItem[] = [
     icon: () => h(AppstoreOutlined),
     label: '关于',
     title: '关于',
+  },
+  {
+    key: '/userManage',
+    icon: () => h(UserOutlined),
+    label: '用户管理',
+    title: '用户管理',
   },
   {
     key: 'external',

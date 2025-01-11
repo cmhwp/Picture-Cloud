@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: RequestConfig = {
 }
 
 const request = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'http://localhost:8080',
   timeout: 60000,
   withCredentials: true,
 })
@@ -61,9 +61,9 @@ request.interceptors.response.use(
 
     // 处理成功响应
     if (code === 0) {
-      if (requestConfig.showMessage) {
-        message.success(msg)
-      }
+      // if (requestConfig.showMessage) {
+      //   message.success(msg)
+      // }
       return response
     }
 
@@ -75,7 +75,7 @@ request.interceptors.response.use(
       if (!isLoginRequest && !isLoginPage) {
         message.warning('请先登录')
         const currentUrl = encodeURIComponent(window.location.href)
-        window.location.href = `/user/login?redirect=${currentUrl}`
+        window.location.href = `/login?redirect=${currentUrl}`
       }
       return Promise.reject(new Error(msg))
     }

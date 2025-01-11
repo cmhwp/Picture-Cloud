@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BasicLayout from '@/layout/BasicLayout.vue';
+import BasicLayout from '@/layout/BasicLayout.vue'
 </script>
 
 <template>
@@ -10,5 +10,17 @@ import BasicLayout from '@/layout/BasicLayout.vue';
   </div>
 </template>
 
-<style scoped>
+<style>
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#app {
+  min-height: 100vh;
+  width: 100%;
+}
 </style>

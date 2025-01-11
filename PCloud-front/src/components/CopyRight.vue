@@ -12,11 +12,11 @@ interface Props {
   recordLink?: string
 }
 
-const { author, record, recordLink } = withDefaults(defineProps<Props>(), {
-  author: '我不是干脆面',
-  record: '豫ICP备2022029049号-1',
-  recordLink: 'http://beian.miit.gov.cn/',
-})
+const {
+  author = '我不是干脆面',
+  record = '豫ICP备2022029049号-1',
+  recordLink = 'http://beian.miit.gov.cn/',
+} = defineProps<Props>()
 
 const year = new Date().getFullYear()
 </script>

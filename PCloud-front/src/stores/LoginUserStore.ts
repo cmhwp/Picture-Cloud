@@ -1,36 +1,33 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
-interface LoginUser {
-  username: string
-  userId?: number
-  avatar?: string
-  email?: string
-  token?: string
-  isLogin: boolean
-}
+import type{ API } from '@/api/typings'
+import { getLoginUserUsingGet, userLogoutUsingPost } from '@/api/userController'
 
 export const useLoginStore = defineStore('loginUser', () => {
-  const loginUser = ref<LoginUser>({
-    username: '未登录',
-    isLogin: false,
+  const loginUser = ref<API.LoginUserVo>({
+    userName: '未登录',
   })
 
-  const setLoginUser = (user: LoginUser) => {
-    loginUser.value = {
-      ...user,
-      isLogin: true,
+  const setLoginUser = async () => {
+    const res = await getLoginUserUsingGet()
+    if (res.data?.code === 0 && res.data?.data) {
+      loginUser.value = {
+        ...res.data.data,
+      }
     }
   }
 
-  const clearLoginUser = () => {
-    loginUser.value = {
-      username: '未登录',
-      isLogin: false,
+  const clearLoginUser = async () => {
+    const res = await userLogoutUsingPost()
+    if (res.data?.code === 0) {
+      loginUser.value = {
+        userName: '未登录',
+      }
     }
   }
 
-  const updateUserInfo = (userInfo: Partial<LoginUser>) => {
+  const updateUserInfo = (userInfo: Partial<API.LoginUserVo>) => {
     loginUser.value = {
       ...loginUser.value,
       ...userInfo,

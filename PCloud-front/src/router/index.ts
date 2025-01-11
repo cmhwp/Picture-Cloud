@@ -14,10 +14,35 @@ const router = createRouter({
       component: () => import('@/views/AboutView.vue'),
     },
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/views/UserLogin.vue'),
-    }
+      path: '/user',
+      children: [
+        {
+          path: '/login',
+          name: 'userLogin',
+          component: () => import('@/views/user/UserLoginView.vue'),
+        },
+        {
+          path: '/register',
+          name: 'userRegister',
+          component: () => import('@/views/user/UserRegisterView.vue'),
+        },
+        {
+          path: '/info',
+          name: 'userInfo',
+          component: () => import('@/views/user/UserInfoView.vue'),
+        },
+      ]
+    },
+    {
+      path: '/admin',
+      children: [
+        {
+          path: '/userManage',
+          name: 'userManage',
+          component: () => import('@/views/admin/userManageView.vue'),
+        },
+      ],
+    },
   ],
 })
 

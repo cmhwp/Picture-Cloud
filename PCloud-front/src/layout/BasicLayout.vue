@@ -1,41 +1,57 @@
 <template>
   <div id="basic-layout">
-    <Layout style="min-height: 100vh;">
-      <LayoutHeader class="header">
-        <GlobalHeader/>
+    <Layout>
+      <LayoutHeader>
+        <GlobalHeader />
       </LayoutHeader>
-      <LayoutContent>
-      <RouterView></RouterView>
+      <LayoutContent class="main-content">
+        <RouterView></RouterView>
       </LayoutContent>
       <LayoutFooter class="fixed-footer">
-        <CopyRight/>
+        <CopyRight />
       </LayoutFooter>
     </Layout>
   </div>
 </template>
 
 <script setup lang="ts">
-import CopyRight from '@/components/CopyRight.vue';
-import { Layout,LayoutHeader,LayoutFooter,LayoutContent } from 'ant-design-vue';
-import { RouterView } from 'vue-router';
-import GlobalHeader from '@/components/GlobalHeader.vue';
+import CopyRight from '@/components/CopyRight.vue'
+import { Layout, LayoutHeader, LayoutFooter, LayoutContent } from 'ant-design-vue'
+import { RouterView } from 'vue-router'
+import GlobalHeader from '@/components/GlobalHeader.vue'
 </script>
+
 <style scoped>
 #basic-layout {
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
 }
-#basic-layout .header {
-  background: #ffffff;
-  color: unset;
-  padding-inline: 30px;
-  box-shadow: 0 2px 8px #f0f1f2;
-  margin-bottom: 20px;
+
+:deep(.ant-layout) {
+  min-height: 100vh;
+  background: transparent;
 }
+
+:deep(.ant-layout-header) {
+  padding: 0;
+  height: auto;
+  line-height: normal;
+  background: transparent;
+  width: 100%;
+}
+
+.main-content {
+  padding: 0 50px;
+  margin: 20px auto;
+  max-width: 1400px;
+  width: 100%;
+  background: transparent;
+}
+
 .fixed-footer {
   position: fixed;
   bottom: 0;
   width: 100%;
-  text-align: center;
+  background: transparent;
+  padding: 0;
 }
 </style>
