@@ -3,7 +3,7 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-form">
-        <h1>登录</h1>
+        <h1 class="login-title">登录</h1>
         <Form :model="formState" @finish="handleFinish" class="form">
           <FormItem name="userAccount" :rules="userAccountRules">
             <Input v-model:value="formState.userAccount" placeholder="用户名">
@@ -73,6 +73,7 @@ const handleFinish = async (values: FormState) => {
         path: '/',
         replace: true
       })
+      console.log(router.getRoutes())
     } else {
       message.error(res.data?.message || '登录失败')
     }
@@ -89,6 +90,13 @@ const handleFinish = async (values: FormState) => {
 </script>
 
 <style scoped>
+.login-title {
+  color: rgb(178, 163, 255);
+  font-weight: 600;
+  margin-bottom: 30px;
+  font-size: 30px;
+  text-align: center;
+}
 .login-container {
   display: flex;
   justify-content: center;

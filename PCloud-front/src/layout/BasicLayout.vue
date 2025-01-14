@@ -37,11 +37,14 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
   line-height: normal;
   background: transparent;
   width: 100%;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
 }
 
 .main-content {
-  padding: 0 50px;
-  margin: 20px auto;
+  padding: 84px 50px 0;
+  margin: 0 auto;
   max-width: 1400px;
   width: 100%;
   background: transparent;

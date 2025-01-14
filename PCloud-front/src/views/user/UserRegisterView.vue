@@ -10,7 +10,7 @@
         </div>
       </div>
       <div class="register-form">
-        <h1>注册</h1>
+        <h1 class="register-title">注册</h1>
         <Form :model="formState" @finish="handleFinish" class="form">
           <FormItem name="userAccount" :rules="userAccountRules">
             <Input v-model:value="formState.userAccount" placeholder="用户名">
@@ -88,6 +88,13 @@ const handleFinish = async (values: FormState) => {
 </script>
 
 <style scoped>
+.register-title {
+  color: rgb(178, 163, 255);
+  font-weight: 600;
+  margin-bottom: 30px;
+  font-size: 30px;
+  text-align: center;
+}
 .register-container {
   display: flex;
   justify-content: center;
@@ -171,11 +178,6 @@ const handleFinish = async (values: FormState) => {
   margin-top: 20px;
 }
 
-.form-footer {
-  text-align: center;
-  margin-top: 20px;
-}
-
 .login-link {
   color: rgb(178, 163, 255);
   text-decoration: none;
@@ -206,28 +208,6 @@ const handleFinish = async (values: FormState) => {
   border-color: rgb(158, 143, 235);
 }
 
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 @media (max-width: 768px) {
   .register-box {
     flex-direction: column;
@@ -254,6 +234,28 @@ const handleFinish = async (values: FormState) => {
 
   .content-wrapper {
     margin-right: 0;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 </style>

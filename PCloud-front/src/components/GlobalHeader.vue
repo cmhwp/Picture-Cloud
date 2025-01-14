@@ -11,10 +11,10 @@
       </Col>
       <Col flex="auto">
         <Menu
-          v-model:selectedKeys="current"
+          v-model:selectedKeys="selectedKeys"
           mode="horizontal"
-          :items="items"
-          @click="doMenuClick"
+          :items="filteredMenuItems"
+          @click="handleMenuClick"
         ></Menu>
       </Col>
       <Col flex="200px">
@@ -27,6 +27,12 @@
           <Dropdown menu-item-icon="logout" @click.prevent class="user-avatar">
             <template #overlay>
               <Menu>
+                <MenuItem>
+                  <span @click="doUserSpace" class="logout-btn">
+                    <UserOutlined />
+                    用户空间
+                  </span>
+                </MenuItem>
                 <MenuItem>
                   <span @click="doUserInfo" class="logout-btn">
                     <UserOutlined />
@@ -59,44 +65,61 @@
 import { ref, computed } from 'vue'
 import { Menu, Row, Col, Avatar, message, MenuItem, Dropdown } from 'ant-design-vue'
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface'
 
-import type { ItemType } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
-import { menuItems } from '@/config/menuConfig'
 import { useLoginStore } from '@/stores'
-const current = ref<string[]>(['home'])
-const items = menuItems
+import { filterMenuByRole } from '@/config/menuConfig'
+
 const router = useRouter()
-const doMenuClick = (item: ItemType) => {
-  if (item) {
-    console.log(item.key)
-    router.push({
-      path: item.key?.toString() || '/',
-    })
+const loginStore = useLoginStore()
+
+const filteredMenuItems = computed(() => {
+  return filterMenuByRole(loginStore.loginUser?.userRole)
+})
+
+const selectedKeys = ref<string[]>([router.currentRoute.value.path])
+
+const handleMenuClick = (info: MenuInfo) => {
+  const key = info.key.toString()
+  if (key.startsWith('http')) {
+    window.open(key)
+  } else {
+    router.push(key)
   }
 }
+
 const doLogin = () => {
   router.push({
     path: 'login',
   })
 }
+
 const doRegister = () => {
   router.push({
     path: 'register',
   })
 }
+
+const doUserSpace = () => {
+  router.push({
+    path: 'space',
+  })
+}
+
 const doUserInfo = () => {
   router.push({
     path: 'info',
   })
 }
-const loginStore = useLoginStore()
+
 //获取用户头像
 const userAvatar = computed(() => {
   console.log(loginStore.loginUser.userAvatar)
 
   return loginStore.loginUser.userAvatar
 })
+
 const doLogout = () => {
   loginStore.clearLoginUser()
   router.push({
@@ -105,10 +128,12 @@ const doLogout = () => {
   })
   message.success('退出成功')
 }
+
 router.afterEach((to) => {
-  current.value = [to.path]
+  selectedKeys.value = [to.path]
 })
 </script>
+
 <style scoped>
 #global-header {
   background-image: linear-gradient(to right, rgb(178, 163, 255) 0%, rgb(232, 255, 199) 100%);
