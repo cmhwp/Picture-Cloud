@@ -91,25 +91,25 @@ const handleMenuClick = (info: MenuInfo) => {
 
 const doLogin = () => {
   router.push({
-    path: 'login',
+    path: '/user/login',
   })
 }
 
 const doRegister = () => {
   router.push({
-    path: 'register',
+    path: '/user/register',
   })
 }
 
 const doUserSpace = () => {
   router.push({
-    path: 'space',
+    path: '/user/space',
   })
 }
 
 const doUserInfo = () => {
   router.push({
-    path: 'info',
+    path: '/user/info',
   })
 }
 

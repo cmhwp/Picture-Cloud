@@ -17,7 +17,7 @@ export const menuItems: MenuItem[] = [
     title: '关于',
   },
   {
-    key: '/userManage',
+    key: '/admin/userManage',
     icon: () => h(UserOutlined),
     label: '用户管理',
     title: '用户管理',

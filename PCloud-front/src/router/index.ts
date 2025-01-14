@@ -20,29 +20,29 @@ const router = createRouter({
       path: '/user',
       children: [
         {
-          path: '/login',
+          path: 'login',
           name: 'userLogin',
           component: () => import('@/views/user/UserLoginView.vue'),
         },
         {
-          path: '/register',
+          path: 'register',
           name: 'userRegister',
           component: () => import('@/views/user/UserRegisterView.vue'),
         },
         {
-          path: '/space',
+          path: 'space',
           name: 'userSpace',
           component: () => import('@/views/user/UserSpaceView.vue'),
           meta: {
-            role: UserRole.USER,
+            roles: [UserRole.USER, UserRole.ADMIN],
           },
         },
         {
-          path: '/info',
+          path: 'info',
           name: 'userInfo',
           component: () => import('@/views/user/UserInfoView.vue'),
           meta: {
-            role: UserRole.USER,
+            roles: [UserRole.USER, UserRole.ADMIN],
           },
         },
       ],
@@ -51,14 +51,14 @@ const router = createRouter({
       path: '/admin',
       children: [
         {
-          path: '/userManage',
+          path: 'userManage',
           name: 'userManage',
           component: () => import('@/views/admin/userManageView.vue'),
+          meta: {
+            roles: [UserRole.ADMIN],
+          },
         },
       ],
-      meta: {
-        role: UserRole.ADMIN,
-      },
     },
   ],
 })
@@ -68,7 +68,13 @@ router.beforeEach(async (to, from, next) => {
   const { loginUser } = loginStore
 
   // 白名单路由，无需登录即可访问
-  const whiteList = ['/login', '/register',"/","/about"]
+  const whiteList = ['/user/login', '/user/register', '/', '/about']
+
+  // 如果已登录且要访问登录/注册页，重定向到首页
+  if (loginUser.userName!=='未登录' && ['/user/login', '/user/register'].includes(to.path)) {
+    next('/')
+    return
+  }
 
   // 如果访问的是白名单页面，直接放行
   if (whiteList.includes(to.path)) {
@@ -79,20 +85,25 @@ router.beforeEach(async (to, from, next) => {
   // 未登录，跳转到登录页
   if (!loginUser) {
     message.warning('请先登录')
-    next(`/login?redirect=${to.path}`)
+    next({
+      path: '/user/login',
+      query: { redirect: to.fullPath },
+    })
     return
   }
 
   // 检查路由是否需要特定角色
-  if (to.meta.role) {
-    // 如果用户角色不匹配，跳转到首页
-    if (loginUser.userRole !== to.meta.role) {
+  const requiredRoles = to.meta.roles as string[]
+  if (requiredRoles && loginUser?.userRole) {
+    // 如果用户角色不在允许的角色列表中，拒绝访问
+    if (!requiredRoles.includes(loginUser.userRole)) {
       message.error('无权访问该页面')
       next('/')
       return
     }
   }
 
+  // 其他情况放行
   next()
 })
 

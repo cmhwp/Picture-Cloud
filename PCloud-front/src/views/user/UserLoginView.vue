@@ -23,7 +23,7 @@
             <Button type="primary" html-type="submit" :loading="loading" block>登录</Button>
           </FormItem>
           <div class="form-footer">
-            <router-link to="/register" class="register-link">注册账号</router-link>
+            <router-link to="/user/register" class="register-link">注册账号</router-link>
           </div>
         </Form>
       </div>

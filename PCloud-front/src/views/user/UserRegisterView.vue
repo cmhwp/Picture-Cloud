@@ -37,7 +37,7 @@
             <Button type="primary" html-type="submit" :loading="loading" block>注册</Button>
           </FormItem>
           <div class="form-footer">
-            <router-link to="/login" class="login-link">已有账号？去登录</router-link>
+            <router-link to="/user/login" class="login-link">已有账号？去登录</router-link>
           </div>
         </Form>
       </div>
@@ -71,7 +71,7 @@ const handleFinish = async (values: FormState) => {
     const res = await userRegisterUsingPost(values)
     if (res.data?.code === 0) {
       message.success('注册成功')
-      router.push('/login')
+      router.push('/user/login')
     } else {
       message.error(res.data?.message || '注册失败')
     }
