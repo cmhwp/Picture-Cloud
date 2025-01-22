@@ -38,10 +38,3 @@ knife4j:
         api-rule-resources:
           - com.photo.pcloudbackend.controller
 ## 对象存储配置（需要从腾讯云获取）
-cos:
-  client:
-    host: https://file.powerdesigner.cn
-    secretId: AKIDPnyvfBUZR5ax9901ua8TaUCg5OVflseH
-    secretKey: VfggaP8g9aIxREt8B0c0A6vXv50iCSTH
-    bucket: picture-1318048461
-    region: ap-guangzhou
