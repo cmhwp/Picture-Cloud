@@ -4,12 +4,17 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 更新用户请求
+ */
 @Data
 public class UserUpdateRequest implements Serializable {
+
     /**
-     * 用户ID
+     * id
      */
     private Long id;
+
     /**
      * 用户昵称
      */
@@ -21,7 +26,7 @@ public class UserUpdateRequest implements Serializable {
     private String userAvatar;
 
     /**
-     * 用户简介
+     * 简介
      */
     private String userProfile;
 

@@ -9,34 +9,33 @@ import java.io.Serializable;
 /**
  * 用户查询请求
  */
-@Data
+
 @EqualsAndHashCode(callSuper = true)
+@Data
 public class UserQueryRequest extends PageRequest implements Serializable {
+
     /**
-     * 用户ID
+     * id
      */
     private Long id;
-    /**
-     * 用户账号
-     */
-    private String userAccount;
+
     /**
      * 用户昵称
      */
     private String userName;
 
     /**
-     * 用户头像
+     * 账号
      */
-    private String userAvatar;
+    private String userAccount;
 
     /**
-     * 用户简介
+     * 简介
      */
     private String userProfile;
 
     /**
-     * 用户角色：user/admin
+     * 用户角色：user/admin/ban
      */
     private String userRole;
 

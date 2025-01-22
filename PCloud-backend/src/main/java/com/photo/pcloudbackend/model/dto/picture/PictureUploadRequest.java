@@ -1,17 +1,14 @@
-package com.photo.pcloudbackend.common;
+package com.photo.pcloudbackend.model.dto.picture;
 
 import lombok.Data;
 
 import java.io.Serializable;
 
-/**
- * 通用的删除请求类
- */
 @Data
-public class DeleteRequest implements Serializable {
+public class PictureUploadRequest implements Serializable {
 
     /**
-     * id
+     * 图片 id（用于修改）
      */
     private Long id;
 

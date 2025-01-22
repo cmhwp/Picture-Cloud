@@ -2,23 +2,30 @@ package com.photo.pcloudbackend.exception;
 
 import lombok.Getter;
 
+/**
+ * 自定义业务异常
+ */
 @Getter
-public class BusinessException extends RuntimeException{
+public class BusinessException extends RuntimeException {
+
     /**
      * 错误码
      */
-    private final int Code;
-    public BusinessException(int  Code, String message) {
+    private final int code;
+
+    public BusinessException(int code, String message) {
         super(message);
-        this.Code = Code;
+        this.code = code;
     }
+
     public BusinessException(ErrorCode errorCode) {
         super(errorCode.getMessage());
-        this.Code = errorCode.getCode();
+        this.code = errorCode.getCode();
     }
+
     public BusinessException(ErrorCode errorCode, String message) {
         super(message);
-        this.Code = errorCode.getCode();
+        this.code = errorCode.getCode();
     }
 
 }

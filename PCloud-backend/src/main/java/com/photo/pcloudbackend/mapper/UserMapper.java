@@ -4,10 +4,10 @@ import com.photo.pcloudbackend.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
-* @author CMH
+* @author 李鱼皮
 * @description 针对表【user(用户)】的数据库操作Mapper
-* @createDate 2025-01-09 16:18:58
-* @Entity com.photo.pcloudbackend.model.entity.User
+* @createDate 2024-12-09 20:03:03
+* @Entity com.yupi.yupicturebackend.model.entity.User
 */
 public interface UserMapper extends BaseMapper<User> {
 

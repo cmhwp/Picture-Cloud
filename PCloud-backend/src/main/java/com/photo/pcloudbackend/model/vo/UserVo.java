@@ -9,8 +9,8 @@ import java.util.Date;
  * 用户视图（脱敏）
  */
 @Data
-public class UserVo implements Serializable {
-    private static final long serialVersionUID = 3295014869374820642L;
+public class UserVO implements Serializable {
+
     /**
      * id
      */
@@ -46,4 +46,5 @@ public class UserVo implements Serializable {
      */
     private Date createTime;
 
+    private static final long serialVersionUID = 1L;
 }
