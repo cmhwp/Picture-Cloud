@@ -1,11 +1,7 @@
 <template>
   <div>
-    <h1>home</h1>
+    <UploadPicture />
   </div>
 </template>
 
-<script setup lang="ts">
-</script>
-
-<style scoped>
-</style>
+<script setup lang="ts"></script>

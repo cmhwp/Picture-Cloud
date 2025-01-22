@@ -11,10 +11,10 @@ export const menuItems: MenuItem[] = [
     title: '主页',
   },
   {
-    key: '/about',
+    key: '/addPicture',
     icon: () => h(AppstoreOutlined),
-    label: '关于',
-    title: '关于',
+    label: '创建图片',
+    title: '创建图片',
   },
   {
     key: '/admin/userManage',

@@ -12,9 +12,12 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('@/views/AboutView.vue'),
+      path: '/addPicture',
+      name: 'addPicture',
+      component: () => import('@/views/AddPictureView.vue'),
+      meta: {
+        roles: [UserRole.ADMIN],
+      },
     },
     {
       path: '/user',

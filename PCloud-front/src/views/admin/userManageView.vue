@@ -17,7 +17,7 @@ const formState = reactive({
 })
 
 const loading = ref(false)
-const tableData = ref<API.UserVo[]>([])
+const tableData = ref<API.UserVO[]>([])
 const pagination = reactive({
   current: 1,
   pageSize: 10,
@@ -35,11 +35,11 @@ const searchParams = reactive({
   sortOrder: 'scend',
 })
 const editingKey = ref('')
-const editableData = reactive<Record<string, API.UserVo>>({})
+const editableData = reactive<Record<string, API.UserVO>>({})
 
-const isEditing = (record: API.UserVo) => record.id?.toString() === editingKey.value
+const isEditing = (record: API.UserVO) => record.id?.toString() === editingKey.value
 
-const edit = (record: API.UserVo) => {
+const edit = (record: API.UserVO) => {
   editableData[Number(record.id)] = { ...record }
   editingKey.value = record.id?.toString() || ''
 }
@@ -48,7 +48,7 @@ const cancel = () => {
   editingKey.value = ''
 }
 
-const save = async (record: API.UserVo) => {
+const save = async (record: API.UserVO) => {
   try {
     const row = editableData[Number(record.id)]
     const res = await updateUserUsingPost(row)
@@ -70,7 +70,7 @@ const columns = [
     title: '用户名',
     dataIndex: 'userAccount',
     key: 'userAccount',
-    customRender: ({ text, record }: { text: string; record: API.UserVo }) => {
+    customRender: ({ text, record }: { text: string; record: API.UserVO }) => {
       const editable = isEditing(record)
       return editable
         ? h(Input, {
@@ -89,7 +89,7 @@ const columns = [
     title: '昵称',
     dataIndex: 'userName',
     key: 'userName',
-    customRender: ({ text, record }: { text: string; record: API.UserVo }) => {
+    customRender: ({ text, record }: { text: string; record: API.UserVO }) => {
       const editable = isEditing(record)
       return editable
         ? h(Input, {
@@ -108,7 +108,7 @@ const columns = [
     title: '头像',
     dataIndex: 'userAvatar',
     key: 'userAvatar',
-    customRender: ({ text, record }: { text: string; record: API.UserVo }) => {
+    customRender: ({ text, record }: { text: string; record: API.UserVO }) => {
       const editable = isEditing(record)
       return editable
         ? h(Input, {
@@ -139,7 +139,7 @@ const columns = [
     title: '简介',
     dataIndex: 'userProfile',
     key: 'userProfile',
-    customRender: ({ text, record }: { text: string; record: API.UserVo }) => {
+    customRender: ({ text, record }: { text: string; record: API.UserVO }) => {
       const editable = isEditing(record)
       return editable
         ? h(Input, {
@@ -165,7 +165,7 @@ const columns = [
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }: { record: API.UserVo }) => {
+    customRender: ({ record }: { record: API.UserVO }) => {
       const editable = isEditing(record)
       return editable
         ? h(Space, {}, () => [
@@ -254,7 +254,7 @@ const handleTableChange = (pag: TablePaginationConfig) => {
   }
 }
 
-const handleDelete = async (record: API.UserVo) => {
+const handleDelete = async (record: API.UserVO) => {
   try {
     await deleteUserUsingPost({ id: record.id })
     message.success('删除成功')

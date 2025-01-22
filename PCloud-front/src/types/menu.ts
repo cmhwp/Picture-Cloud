@@ -2,7 +2,7 @@ import type { VNode } from 'vue'
 
 export interface MenuItem {
   key: string
-  icon?: () => any
+  icon?: () => VNode
   label: string
   title: string
   href?: string
