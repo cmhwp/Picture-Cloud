@@ -27,12 +27,12 @@ const pagination = reactive({
     return `共 ${total} 条`
   },
 })
-const searchParams = reactive({
+const searchParams = reactive<API.UserQueryRequest>({
   ...formState,
-  currentPageNum: 1,
-  pageSize: 2,
+  current: 1,
+  pageSize: 10,
   sortField: 'createTime',
-  sortOrder: 'scend',
+  sortOrder: 'descend',
 })
 const editingKey = ref('')
 const editableData = reactive<Record<string, API.UserVO>>({})
@@ -224,16 +224,17 @@ const columns = [
 const handleSearch = async () => {
   loading.value = true
   try {
-    Object.assign(searchParams, {
-      ...formState,
-      currentPageNum: pagination.current,
+    const res = await listUserVoByPageUsingPost({
+      ...searchParams,
+      current: pagination.current,
       pageSize: pagination.pageSize,
     })
-    const res = await listUserVoByPageUsingPost(searchParams)
     if (res.data?.data) {
       tableData.value = res.data.data.records || []
-      pagination.total = Number(res.data.data.total) || 0
+      pagination.total = res.data.data.total || 0
     }
+  } catch (error) {
+    message.error('获取用户列表失败: ' + error)
   } finally {
     loading.value = false
   }
@@ -247,11 +248,11 @@ const handleReset = () => {
 }
 
 const handleTableChange = (pag: TablePaginationConfig) => {
-  if (pag.current && pag.pageSize) {
-    pagination.current = pag.current
-    pagination.pageSize = pag.pageSize
-    handleSearch()
-  }
+  pagination.current = pag.current || 1
+  pagination.pageSize = pag.pageSize || 10
+  searchParams.current = pagination.current
+  searchParams.pageSize = pagination.pageSize
+  handleSearch()
 }
 
 const handleDelete = async (record: API.UserVO) => {

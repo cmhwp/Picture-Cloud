@@ -1,6 +1,7 @@
 /* eslint-disable */
 import request from '@/request'
 import type { API } from './typings'
+
 /** deletePicture POST /api/picture/delete */
 export async function deletePictureUsingPost(
   body: API.DeleteRequest,
@@ -116,7 +117,6 @@ export async function updatePictureUsingPost(
 
 /** uploadPicture POST /api/picture/upload */
 export async function uploadPictureUsingPost(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.uploadPictureUsingPOSTParams,
   body: {},
   file?: File,
@@ -149,10 +149,10 @@ export async function uploadPictureUsingPost(
     params: {
       ...params,
     },
+    data: formData,
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-    data: formData,
     ...(options || {}),
   })
 }

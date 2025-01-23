@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { message, Upload, Modal } from 'ant-design-vue'
+import { message, Upload, Button, Modal } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { InboxOutlined } from '@ant-design/icons-vue'
 import { uploadPictureUsingPost } from '@/api/pictureController'
 import type { API } from '@/api/typings'
+
 const props = defineProps<{
   picture?: API.PictureVO
-  onSuccess?: (picture: API.PictureVO) => void
+  onSuccess?: (picture: API.PictureVO | undefined) => void
 }>()
 
 const fileList = ref<UploadFile[]>([])
@@ -15,7 +16,6 @@ const loading = ref(false)
 
 const previewVisible = ref(false)
 const previewImage = ref('')
-const previewTitle = ref('')
 
 // 监听 picture 的变化，当 picture 为 undefined 时清空文件列表
 watch(
@@ -81,43 +81,86 @@ const beforeUpload = (file: File) => {
   return isImage && isLt10M
 }
 
-const handlePreview = async (file: UploadFile) => {
-  if (!file.url && !file.preview) {
-    file.preview = file.url || (file.response && file.response.url)
-  }
-  previewImage.value = file.url || file.preview || ''
-  previewVisible.value = true
-  previewTitle.value = file.name || file.url?.substring(file.url.lastIndexOf('/') + 1) || ''
-}
-
 const handleCancel = () => {
   previewVisible.value = false
+}
+
+const handleReupload = () => {
+  fileList.value = []
+  props.onSuccess?.(undefined)
+}
+
+const handlePreviewImage = (url: string) => {
+  previewImage.value = url
+  previewVisible.value = true
 }
 </script>
 
 <template>
-  <div>
+  <div class="upload-container">
+    <div v-if="picture?.url" class="preview-container" @click="handlePreviewImage(picture.url)">
+      <img :src="picture.url" class="preview-image" />
+      <div class="preview-actions">
+        <Button type="primary" @click.stop="handleReupload">重新上传</Button>
+      </div>
+    </div>
     <Upload
+      v-else
       v-model:file-list="fileList"
-      list-type="picture-card"
+      name="file"
+      :show-upload-list="false"
       :custom-request="customRequest"
       :before-upload="beforeUpload"
       @change="handleChange"
-      @preview="handlePreview"
     >
-      <div v-if="fileList.length < 1" class="upload-area">
-        <PlusOutlined />
-        <div style="margin-top: 8px">点击或拖拽上传图片</div>
+      <div class="upload-area">
+        <p class="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p class="ant-upload-text">点击或拖拽文件到此区域上传</p>
+        <p class="ant-upload-hint">支持单个图片上传，可点击或拖拽</p>
       </div>
     </Upload>
 
-    <Modal :visible="previewVisible" :title="previewTitle" :footer="null" @cancel="handleCancel">
-      <img :alt="previewTitle" :src="previewImage" style="width: 100%" />
+    <Modal v-model:visible="previewVisible" :footer="null" @cancel="handleCancel">
+      <img :src="previewImage" style="width: 100%" />
     </Modal>
   </div>
 </template>
 
 <style scoped>
+.preview-container {
+  position: relative;
+  width: 300px;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.preview-container:hover .preview-actions {
+  opacity: 1;
+}
+
 /* :deep(.ant-upload-list-item-container) {
   width: 100% !important;
   height: 100% !important;

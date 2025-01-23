@@ -56,7 +56,15 @@ const router = createRouter({
         {
           path: 'userManage',
           name: 'userManage',
-          component: () => import('@/views/admin/userManageView.vue'),
+          component: () => import('@/views/admin/UserManageView.vue'),
+          meta: {
+            roles: [UserRole.ADMIN],
+          },
+        },
+        {
+          path: 'pictureManage',
+          name: 'pictureManage',
+          component: () => import('@/views/admin/PictureManageView.vue'),
           meta: {
             roles: [UserRole.ADMIN],
           },
@@ -71,10 +79,10 @@ router.beforeEach(async (to, from, next) => {
   const { loginUser } = loginStore
 
   // 白名单路由，无需登录即可访问
-  const whiteList = ['/user/login', '/user/register', '/', '/about']
+  const whiteList = ['/user/login', '/user/register', '/']
 
   // 如果已登录且要访问登录/注册页，重定向到首页
-  if (loginUser.userName!=='未登录' && ['/user/login', '/user/register'].includes(to.path)) {
+  if (loginUser.userName !== '未登录' && ['/user/login', '/user/register'].includes(to.path)) {
     next('/')
     return
   }

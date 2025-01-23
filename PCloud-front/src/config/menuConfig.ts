@@ -1,8 +1,8 @@
 import { h } from 'vue'
-import { HomeOutlined, AppstoreOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, AppstoreOutlined, UserOutlined, PictureOutlined } from '@ant-design/icons-vue'
 import type { MenuItem } from '@/types/menu'
 import { UserRole } from '@/config/userConfig'
-
+// 菜单配置
 export const menuItems: MenuItem[] = [
   {
     key: '/',
@@ -15,12 +15,20 @@ export const menuItems: MenuItem[] = [
     icon: () => h(AppstoreOutlined),
     label: '创建图片',
     title: '创建图片',
+    role: UserRole.ADMIN,
   },
   {
     key: '/admin/userManage',
     icon: () => h(UserOutlined),
     label: '用户管理',
     title: '用户管理',
+    role: UserRole.ADMIN,
+  },
+  {
+    key: '/admin/pictureManage',
+    icon: () => h(PictureOutlined),
+    label: '图片管理',
+    title: '图片管理',
     role: UserRole.ADMIN,
   },
   {

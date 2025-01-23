@@ -82,7 +82,7 @@ declare namespace API {
 
   type getPictureVOByIdUsingGETParams = {
     /** id */
-    id?: number
+    id: number
   }
 
   type getUserByIdUsingGETParams = {

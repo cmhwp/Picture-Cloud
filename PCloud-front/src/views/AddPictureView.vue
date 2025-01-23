@@ -1,16 +1,16 @@
 <template>
   <div class="add-picture-container">
-    <Card title="上传图片" :bordered="false">
+    <Card :title="isEdit ? '修改图片' : '创建图片'" :bordered="false">
       <Form :model="formState" layout="vertical">
         <Form.Item label="图片名称" name="name">
-          <Input v-model:value="formState.name" placeholder="请输入图片名称" />
+          <Input v-model:value="formState.name" placeholder="请上传图片后编辑" />
         </Form.Item>
 
         <Form.Item label="分类" name="category">
           <Select v-model:value="formState.category" placeholder="请选择分类">
-            <Select.Option value="风景">风景</Select.Option>
-            <Select.Option value="人物">人物</Select.Option>
-            <Select.Option value="动物">动物</Select.Option>
+            <Select.Option v-for="item in categoryList" :key="item.value" :value="item.value">
+              {{ item.label }}
+            </Select.Option>
           </Select>
         </Form.Item>
 
@@ -29,8 +29,8 @@
             placeholder="请输入标签"
             :token-separators="[',']"
           >
-            <Select.Option v-for="tag in formState.tags" :key="tag" :value="tag">
-              <Tag :color="getRandomColor()">{{ tag }}</Tag>
+            <Select.Option v-for="tag in tagList" :key="tag.value" :value="tag.value">
+              <Tag :color="tag.color">{{ tag.label }}</Tag>
             </Select.Option>
           </Select>
         </Form.Item>
@@ -41,7 +41,9 @@
 
         <Form.Item>
           <div class="form-buttons">
-            <Button type="primary" :loading="loading" @click="handleSubmit"> 创建图片 </Button>
+            <Button type="primary" :loading="loading" @click="handleSubmit">
+              {{ isEdit ? '保存修改' : '创建图片' }}
+            </Button>
             <Button @click="handleReset">重置</Button>
           </div>
         </Form.Item>
@@ -51,52 +53,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Card, Form, Input, Select, Tag, Button, message } from 'ant-design-vue'
 import UploadPicture from '@/components/UploadPicture.vue'
 import type { API } from '@/api/typings'
-import { updatePictureUsingPost } from '@/api/pictureController'
+import { updatePictureUsingPost, getPictureVoByIdUsingGet } from '@/api/pictureController'
+import { categoryList, tagList } from '@/config/OptionConfig'
+import { useRouter, useRoute } from 'vue-router'
 
-const formState = ref({
-  name: '',
-  category: '',
-  introduction: '',
-  tags: [] as string[],
+const formState = ref<API.PictureEditRequest>({})
+const picture = ref<API.PictureVO>()
+const router = useRouter()
+const route = useRoute()
+const loading = ref(false)
+const isEdit = ref(false)
+
+onMounted(async () => {
+  const id = route.query.id
+  console.log('查询ID:', Number(id))
+  if (id) {
+    isEdit.value = true
+    try {
+      // @ts-expect-error: id 类型不匹配，但API实际可以接受字符串ID
+      const res = await getPictureVoByIdUsingGet({ id: id })
+      console.log('API响应:', res)
+      if (res.data?.code === 0 && res.data.data) {
+        const pictureData = res.data.data
+        picture.value = {
+          ...pictureData,
+          tags: pictureData.tags || [],
+        }
+        formState.value = {
+          name: pictureData.name,
+          category: pictureData.category,
+          introduction: pictureData.introduction,
+          tags: pictureData.tags || [],
+        }
+      } else {
+        message.error(`获取图片失败: ${res.data?.message || '未知错误'}`)
+      }
+    } catch (error) {
+      message.error('获取图片信息失败: ' + error)
+    }
+  }
 })
 
-const picture = ref<API.PictureVO>()
-
-// 添加标签颜色数组
-const tagColors = [
-  'pink',
-  'red',
-  'orange',
-  'green',
-  'cyan',
-  'blue',
-  'purple',
-  'geekblue',
-  'magenta',
-  'volcano',
-  'gold',
-  'lime',
-]
-
-// 获取随机颜色的函数
-const getRandomColor = () => {
-  const index = Math.floor(Math.random() * tagColors.length)
-  return tagColors[index]
+const handleUploadSuccess = (uploadedPicture: API.PictureVO | undefined) => {
+  if (uploadedPicture) {
+    picture.value = uploadedPicture
+    formState.value.name = uploadedPicture.name || ''
+    formState.value.category = uploadedPicture.category || ''
+    formState.value.introduction = uploadedPicture.introduction || ''
+    formState.value.tags = uploadedPicture.tags || []
+  } else {
+    picture.value = undefined
+    formState.value = {}
+  }
 }
-
-const handleUploadSuccess = (uploadedPicture: API.PictureVO) => {
-  picture.value = uploadedPicture
-  formState.value.name = uploadedPicture.name || ''
-  formState.value.category = uploadedPicture.category || ''
-  formState.value.introduction = uploadedPicture.introduction || ''
-  formState.value.tags = uploadedPicture.tags || []
-}
-
-const loading = ref(false)
 
 const handleSubmit = async () => {
   if (!picture.value?.id) {
@@ -115,13 +128,13 @@ const handleSubmit = async () => {
     })
 
     if (res.data?.code === 0) {
-      message.success('创建成功')
-      handleReset()
+      message.success(isEdit.value ? '修改成功' : '创建成功')
+      router.push(`/pictureDetail/${picture.value?.id}`)
     } else {
-      message.error(res.data?.message || '创建失败')
+      message.error(res.data?.message || (isEdit.value ? '修改失败' : '创建失败'))
     }
   } catch (error) {
-    message.error('创建失败: ' + error)
+    message.error((isEdit.value ? '修改' : '创建') + '失败: ' + error)
   } finally {
     loading.value = false
   }
