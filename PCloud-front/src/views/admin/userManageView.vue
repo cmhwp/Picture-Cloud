@@ -12,8 +12,8 @@ import type { TablePaginationConfig } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
 const formState = reactive({
-  userAccount: '',
   userName: '',
+  userRole: undefined as string | undefined,
 })
 
 const loading = ref(false)
@@ -26,13 +26,6 @@ const pagination = reactive({
   showTotal: (total: number) => {
     return `共 ${total} 条`
   },
-})
-const searchParams = reactive<API.UserQueryRequest>({
-  ...formState,
-  current: 1,
-  pageSize: 10,
-  sortField: 'createTime',
-  sortOrder: 'descend',
 })
 const editingKey = ref('')
 const editableData = reactive<Record<string, API.UserVO>>({})
@@ -225,13 +218,16 @@ const handleSearch = async () => {
   loading.value = true
   try {
     const res = await listUserVoByPageUsingPost({
-      ...searchParams,
+      userName: formState.userName,
+      userRole: formState.userRole,
       current: pagination.current,
       pageSize: pagination.pageSize,
+      sortField: 'createTime',
+      sortOrder: 'descend',
     })
     if (res.data?.data) {
-      tableData.value = res.data.data.records || []
-      pagination.total = res.data.data.total || 0
+      tableData.value = res.data.data.records ?? []
+      pagination.total = res.data.data.total ?? 0
     }
   } catch (error) {
     message.error('获取用户列表失败: ' + error)
@@ -241,17 +237,15 @@ const handleSearch = async () => {
 }
 
 const handleReset = () => {
-  formState.userAccount = ''
   formState.userName = ''
+  formState.userRole = undefined
   pagination.current = 1
   handleSearch()
 }
 
 const handleTableChange = (pag: TablePaginationConfig) => {
-  pagination.current = pag.current || 1
-  pagination.pageSize = pag.pageSize || 10
-  searchParams.current = pagination.current
-  searchParams.pageSize = pagination.pageSize
+  pagination.current = pag.current ?? 1
+  pagination.pageSize = pag.pageSize ?? 10
   handleSearch()
 }
 
@@ -274,11 +268,11 @@ onMounted(() => {
   <div class="user-manage-container">
     <Card class="search-card" :bordered="false">
       <Form layout="inline" :model="formState">
-        <Form.Item label="用户名" name="userAccount">
-          <Input v-model:value="formState.userAccount" placeholder="请输入用户名" allowClear />
+        <Form.Item label="用户名" name="userName">
+          <Input v-model:value="formState.userName" placeholder="请输入用户名" allowClear />
         </Form.Item>
-        <Form.Item label="昵称" name="userName">
-          <Input v-model:value="formState.userName" placeholder="请输入昵称" allowClear />
+        <Form.Item label="角色" name="userRole">
+          <Input v-model:value="formState.userRole" placeholder="请选择角色" allowClear />
         </Form.Item>
         <Form.Item>
           <Space :size="10">

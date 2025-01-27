@@ -11,10 +11,25 @@ import {
   message,
   Popconfirm,
   Image,
+  Modal,
+  Radio,
+  Typography,
+  Select,
 } from 'ant-design-vue'
-import { SearchOutlined, ReloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SettingOutlined,
+} from '@ant-design/icons-vue'
 import type { API } from '@/api/typings'
-import { deletePictureUsingPost, listPictureVoByPageUsingPost } from '@/api/pictureController'
+import {
+  deletePictureUsingPost,
+  listPictureByPageUsingPost,
+  reviewPictureUsingPost,
+} from '@/api/pictureController'
+import { PictureReviewStatusOptions } from '@/constant/PictureConstant'
 import type { TablePaginationConfig } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { useRouter } from 'vue-router'
@@ -24,10 +39,11 @@ const router = useRouter()
 const formState = reactive({
   name: '',
   category: '',
+  reviewStatus: undefined as number | undefined,
 })
 
 const loading = ref(false)
-const tableData = ref<API.PictureVO[]>([])
+const tableData = ref<API.Picture[]>([])
 const pagination = reactive({
   current: 1,
   pageSize: 10,
@@ -37,14 +53,13 @@ const pagination = reactive({
 })
 
 const searchParams = reactive<API.PictureQueryRequest>({
-  ...formState,
   current: 1,
   pageSize: 10,
   sortField: 'createTime',
   sortOrder: 'descend',
 })
 
-const columns: TableColumnType[] = [
+const columns = [
   {
     title: '预览图',
     dataIndex: 'url',
@@ -76,9 +91,16 @@ const columns: TableColumnType[] = [
     title: '标签',
     dataIndex: 'tags',
     width: 150,
-    customRender: ({ text }: { text: string[] }) => {
-      return text?.length
-        ? h(Space, { wrap: true }, () => text.map((tag) => h(Tag, { color: 'blue' }, () => tag)))
+    customRender: ({ text }: { text: string | string[] }) => {
+      if (!text) return '-'
+      const tags = Array.isArray(text)
+        ? text
+        : text
+            .replace(/[\[\]"]/g, '')
+            .split(',')
+            .filter(Boolean)
+      return tags.length
+        ? h(Space, { wrap: true }, () => tags.map((tag) => h(Tag, { color: 'blue' }, () => tag)))
         : '-'
     },
   },
@@ -86,7 +108,7 @@ const columns: TableColumnType[] = [
     title: '图片信息',
     dataIndex: 'pictureInfo',
     width: 150,
-    customRender: ({ record }: { record: API.PictureVO }) => {
+    customRender: ({ record }: { record: API.Picture }) => {
       const info = []
       if (record.picWidth && record.picHeight) {
         info.push(`${record.picWidth}x${record.picHeight}`)
@@ -111,9 +133,22 @@ const columns: TableColumnType[] = [
     width: 150,
   },
   {
-    title: '上传者',
-    dataIndex: ['user', 'userName'],
+    title: '审核状态',
+    dataIndex: 'reviewStatus',
     width: 100,
+    customRender: ({ text }: { text: number }) => {
+      const status = PictureReviewStatusOptions[text].label || '未知'
+      const color = text === 1 ? 'success' : text === 2 ? 'error' : 'warning'
+      return h(Tag, { color }, () => status)
+    },
+  },
+  {
+    title: '审核信息',
+    dataIndex: 'reviewInfo',
+    width: 150,
+    customRender: ({ record }: { record: API.Picture }) => {
+      return h(Text, { color: 'blue' }, () => record.reviewMessage)
+    },
   },
   {
     title: '创建时间',
@@ -128,8 +163,18 @@ const columns: TableColumnType[] = [
     key: 'action',
     width: 150,
     fixed: 'right',
-    customRender: ({ record }: { record: API.PictureVO }) => {
-      return h(Space, {}, () => [
+    customRender: ({ record }: { record: API.Picture }) => {
+      return h(Space, { wrap: true, size: [4, 0] }, () => [
+        h(
+          Button,
+          {
+            type: 'link',
+            onClick: () => handleReview(record),
+            style: { color: '#52c41a' },
+            icon: h(SettingOutlined),
+          },
+          () => '审核',
+        ),
         h(
           Button,
           {
@@ -162,22 +207,40 @@ const columns: TableColumnType[] = [
       ])
     },
   },
-] as TableColumnType[]
+] as TableColumnType<API.Picture>[]
+
+const reviewVisible = ref(false)
+const reviewForm = reactive({
+  id: 0,
+  reviewStatus: 1,
+  reviewMessage: '',
+})
+
+const { Text } = Typography
 
 const handleSearch = async () => {
   loading.value = true
   try {
-    const res = await listPictureVoByPageUsingPost({
-      ...searchParams,
+    const res = await listPictureByPageUsingPost({
+      name: formState.name,
+      category: formState.category,
+      reviewStatus: formState.reviewStatus,
       current: pagination.current,
       pageSize: pagination.pageSize,
+      sortField: 'createTime',
+      sortOrder: 'descend',
     })
     if (res.data?.data) {
-      tableData.value = res.data.data.records || []
-      pagination.total = res.data.data.total || 0
+      tableData.value = res.data.data.records ?? []
+      pagination.total = res.data.data.total ?? 0
+    } else {
+      tableData.value = []
+      pagination.total = 0
     }
   } catch (error) {
-    message.error('获取图片列表失败: ' + error)
+    message.error('获取图片列表失败: ' + (error instanceof Error ? error.message : String(error)))
+    tableData.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -186,23 +249,24 @@ const handleSearch = async () => {
 const handleReset = () => {
   formState.name = ''
   formState.category = ''
+  formState.reviewStatus = undefined
   pagination.current = 1
   handleSearch()
 }
 
 const handleTableChange = (pag: TablePaginationConfig) => {
-  pagination.current = pag.current || 1
-  pagination.pageSize = pag.pageSize || 10
+  pagination.current = pag.current ?? 1
+  pagination.pageSize = pag.pageSize ?? 10
   searchParams.current = pagination.current
   searchParams.pageSize = pagination.pageSize
   handleSearch()
 }
 
-const handleEdit = (record: API.PictureVO) => {
+const handleEdit = (record: API.Picture) => {
   router.push(`/addPicture?id=${record.id}`)
 }
 
-const handleDelete = async (record: API.PictureVO) => {
+const handleDelete = async (record: API.Picture) => {
   try {
     await deletePictureUsingPost({ id: record.id })
     message.success('删除成功')
@@ -211,6 +275,24 @@ const handleDelete = async (record: API.PictureVO) => {
     message.error('删除失败: ' + error)
   }
 }
+
+const handleReview = (record: API.Picture) => {
+  reviewForm.id = record.id ?? 0
+  reviewVisible.value = true
+}
+
+const handleReviewSubmit = async () => {
+  try {
+    await reviewPictureUsingPost(reviewForm)
+    message.success('审核成功')
+    reviewVisible.value = false
+    handleSearch()
+  } catch (error) {
+    message.error('审核失败: ' + error)
+  }
+}
+
+const FormItem = Form.Item
 
 onMounted(() => {
   handleSearch()
@@ -221,13 +303,23 @@ onMounted(() => {
   <div class="picture-manage-container">
     <Card class="search-card" :bordered="false">
       <Form layout="inline" :model="formState">
-        <Form.Item label="图片名称" name="name">
+        <FormItem label="图片名称" name="name">
           <Input v-model:value="formState.name" placeholder="请输入图片名称" allowClear />
-        </Form.Item>
-        <Form.Item label="分类" name="category">
+        </FormItem>
+        <FormItem label="分类" name="category">
           <Input v-model:value="formState.category" placeholder="请输入分类" allowClear />
-        </Form.Item>
-        <Form.Item>
+        </FormItem>
+        <FormItem label="审核状态" name="reviewStatus">
+          <Select
+            v-model:value="formState.reviewStatus"
+            :options="PictureReviewStatusOptions"
+            placeholder="请选择审核状态"
+            allowClear
+            style="width: 200px"
+          >
+          </Select>
+        </FormItem>
+        <FormItem>
           <Space :size="10">
             <Button type="primary" @click="handleSearch">
               <template #icon><SearchOutlined /></template>
@@ -238,7 +330,7 @@ onMounted(() => {
               重置
             </Button>
           </Space>
-        </Form.Item>
+        </FormItem>
       </Form>
     </Card>
 
@@ -253,6 +345,20 @@ onMounted(() => {
         :scroll="{ x: 1200 }"
       />
     </Card>
+
+    <Modal v-model:visible="reviewVisible" title="审核图片" @ok="handleReviewSubmit">
+      <Form :model="reviewForm">
+        <FormItem label="审核结果">
+          <Radio.Group v-model:value="reviewForm.reviewStatus">
+            <Radio :value="1">通过</Radio>
+            <Radio :value="2">拒绝</Radio>
+          </Radio.Group>
+        </FormItem>
+        <FormItem label="审核备注">
+          <Input.TextArea v-model:value="reviewForm.reviewMessage" placeholder="请输入审核备注" />
+        </FormItem>
+      </Form>
+    </Modal>
   </div>
 </template>
 
@@ -332,5 +438,44 @@ onMounted(() => {
 :deep(.ant-image) {
   border-radius: 5px;
   overflow: hidden;
+}
+
+/* Modal 样式 */
+:deep(.ant-modal-content) {
+  background: linear-gradient(135deg, rgb(178, 163, 255, 0.1) 0%, rgb(232, 255, 199, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.ant-modal-header) {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.ant-modal-title) {
+  color: #333;
+}
+
+:deep(.ant-modal-footer) {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.ant-radio-wrapper) {
+  color: #333;
+}
+
+:deep(.ant-input) {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input:focus) {
+  border-color: rgb(178, 163, 255);
+  box-shadow: 0 0 0 2px rgba(178, 163, 255, 0.2);
+}
+
+:deep(.ant-form-item-label > label) {
+  color: #333;
 }
 </style>

@@ -20,6 +20,12 @@ const router = createRouter({
       },
     },
     {
+      path: '/pictureDetail/:id',
+      name: 'PictureDetail',
+      component: () => import('@/views/picture/PictureDetail.vue'),
+      props: true, // 将路由参数作为组件的props传递
+    },
+    {
       path: '/user',
       children: [
         {
@@ -94,7 +100,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // 未登录，跳转到登录页
-  if (!loginUser) {
+  if (loginUser.userName === '未登录') {
     message.warning('请先登录')
     next({
       path: '/user/login',
@@ -105,7 +111,7 @@ router.beforeEach(async (to, from, next) => {
 
   // 检查路由是否需要特定角色
   const requiredRoles = to.meta.roles as string[]
-  if (requiredRoles && loginUser?.userRole) {
+  if (requiredRoles && loginUser.userRole) {
     // 如果用户角色不在允许的角色列表中，拒绝访问
     if (!requiredRoles.includes(loginUser.userRole)) {
       message.error('无权访问该页面')

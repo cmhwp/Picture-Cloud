@@ -54,14 +54,38 @@
 
       <!-- 图片网格 -->
       <div class="image-grid">
-        <Card v-for="image in images" :key="image.id" hoverable class="image-card">
+        <Card v-for="image in filteredImages" :key="image.id" hoverable class="image-card">
           <template #cover>
-            <img :src="image.url" :alt="image.name" />
+            <div class="image-wrapper">
+              <img :src="image.url" :alt="image.name" />
+              <div class="image-overlay">
+                <Space>
+                  <Button type="text" class="overlay-icon" @click="handleCollect(image)">
+                    <HeartOutlined />
+                  </Button>
+                  <Button type="text" class="overlay-icon" @click="handlePreview(image)">
+                    <EyeOutlined />
+                  </Button>
+                  <Button type="text" class="overlay-icon" @click="handleDownload(image)">
+                    <DownloadOutlined />
+                  </Button>
+                </Space>
+              </div>
+            </div>
           </template>
           <Card.Meta :title="image.name">
             <template #description>
               <Space>
-                <Tag v-for="tag in image.tags" :key="tag" :color="getRandomColor()">{{ tag }}</Tag>
+                <Tag color="#ff4d4f">📁 {{ image.category || '未分类' }}</Tag>
+                <Space wrap>
+                  <Tag
+                    v-for="tag in image.tags?.length ? image.tags : ['默认']"
+                    :key="tag"
+                    :color="getRandomColor()"
+                  >
+                    🏷️ {{ tag }}
+                  </Tag>
+                </Space>
               </Space>
             </template>
           </Card.Meta>
@@ -70,31 +94,92 @@
 
       <!-- 加载更多 -->
       <div class="load-more">
-        <Button type="primary" :loading="loading" @click="loadMore">加载更多</Button>
+        <Button v-if="hasMore" type="primary" :loading="loading" @click="loadMore">
+          加载更多
+        </Button>
+        <div v-else class="no-more">没有更多数据了</div>
       </div>
     </div>
+
+    <!-- 图片预览 Modal -->
+    <Modal
+      v-model:visible="previewVisible"
+      :footer="null"
+      @cancel="handleCancel"
+      width="1000px"
+      :centered="true"
+      wrapClassName="preview-modal"
+    >
+      <div class="preview-content">
+        <div class="preview-image">
+          <img :src="previewImage" />
+        </div>
+        <div class="preview-info">
+          <h2>{{ currentImage?.name }}</h2>
+          <div class="info-item">
+            <label>👤 作者：</label>
+            <span>{{ currentImage?.user?.userName || '未知' }}</span>
+          </div>
+          <div class="info-item">
+            <label>📁 分类：</label>
+            <Tag color="#ff4d4f">{{ currentImage?.category || '未分类' }}</Tag>
+          </div>
+          <div class="info-item">
+            <label>🏷️ 标签：</label>
+            <Space wrap>
+              <Tag
+                v-for="tag in currentImage?.tags?.length ? currentImage.tags : ['默认']"
+                :key="tag"
+                :color="getRandomColor()"
+              >
+                {{ tag }}
+              </Tag>
+            </Space>
+          </div>
+          <div class="info-item">
+            <label>📅 上传时间：</label>
+            <span>{{ dayjs(currentImage?.createTime).format('YYYY-MM-DD HH:mm:ss') }}</span>
+          </div>
+
+          <!-- 添加操作按钮组 -->
+          <div class="action-buttons">
+            <Button type="primary" block @click="handleViewDetail(currentImage)">
+              <EyeOutlined /> 查看图片详情
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue'
-import { Input, Tag, Tabs, Card, Button, Space } from 'ant-design-vue'
+import { Input, Tag, Tabs, Card, Button, Space, Modal } from 'ant-design-vue'
 import type { API } from '@/api/typings'
 import { listPictureVoByPageUsingPost } from '@/api/pictureController'
 import { tagList, colorList, categoryList } from '@/config/OptionConfig'
+import { HeartOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 
 const searchText = ref('')
 const activeTab = ref('')
 const loading = ref(false)
 const images = ref<API.PictureVO[]>([])
 const sortType = ref('featured')
+const previewVisible = ref(false)
+const previewImage = ref('')
+const currentImage = ref<API.PictureVO | null>(null)
 
 const searchParams = reactive<API.PictureQueryRequest>({
   current: 1,
-  pageSize: 10,
+  pageSize: 12,
   sortField: 'createTime',
   sortOrder: 'descend',
 })
+
+const hasMore = ref(true)
 
 const popularTags = computed(() => {
   return tagList.value?.map((item) => item.label) || []
@@ -117,24 +202,45 @@ const handleSort = (type: string) => {
   sortType.value = type
   // TODO: 实现排序逻辑
 }
-const loadData = async () => {
+
+// 添加计算属性来过滤图片
+const filteredImages = computed(() => {
+  if (!activeTab.value || activeTab.value === 'all') {
+    return images.value
+  }
+  return images.value.filter((image) => image.category === activeTab.value)
+})
+
+// 修改加载数据的函数
+const loadData = async (loadMore = false) => {
   try {
     const res = await listPictureVoByPageUsingPost({
       ...searchParams,
+      category: activeTab.value === 'all' ? undefined : activeTab.value,
     })
+
     if (res.data?.data?.records) {
-      images.value = res.data.data.records
+      if (loadMore) {
+        images.value = [...images.value, ...res.data.data.records]
+      } else {
+        images.value = res.data.data.records
+      }
+      hasMore.value = (res.data?.data?.total ?? 0) > images.value.length
     }
   } catch (error) {
     console.error('加载图片失败:', error)
   }
 }
-const loadMore = () => {
+
+const loadMore = async () => {
+  if (!hasMore.value) return
   loading.value = true
-  // TODO: 实现加载更多逻辑
-  setTimeout(() => {
+  searchParams.current! += 1 // 使用非空断言
+  try {
+    await loadData(true)
+  } finally {
     loading.value = false
-  }, 1000)
+  }
 }
 
 onMounted(async () => {
@@ -145,11 +251,41 @@ onMounted(async () => {
   loadData()
 })
 
-watch([categoryList], () => {
-  if (categoryList.value?.length && !activeTab.value) {
-    activeTab.value = categoryList.value[0].value
-  }
+// 修改分类切换的监听
+watch(activeTab, () => {
+  searchParams.current = 1 // 重置页码
+  hasMore.value = true // 重置加载更多状态
+  loadData()
 })
+
+const handleCollect = (image: API.PictureVO) => {
+  // 处理收藏逻辑
+  console.log('收藏图片:', image)
+}
+
+const handlePreview = (image: API.PictureVO) => {
+  currentImage.value = image
+  previewImage.value = image.url ?? ''
+  previewVisible.value = true
+}
+
+const handleDownload = (image: API.PictureVO) => {
+  // 处理下载逻辑
+  console.log('下载图片:', image)
+}
+
+const handleCancel = () => {
+  previewVisible.value = false
+  currentImage.value = null
+}
+
+const router = useRouter()
+
+const handleViewDetail = (image: API.PictureVO | null) => {
+  if (image?.id) {
+    router.push(`/pictureDetail/${image.id}`)
+  }
+}
 </script>
 
 <style scoped>
@@ -225,11 +361,54 @@ watch([categoryList], () => {
   transform: translateY(-5px);
 }
 
-.image-card img {
+.image-wrapper {
+  position: relative;
   width: 100%;
   height: 200px;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px 8px 0 0;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 8px 8px 0 0;
+}
+
+.image-wrapper:hover .image-overlay {
+  opacity: 1;
+}
+
+.overlay-icon {
+  color: white !important;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.overlay-icon:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .load-more {
@@ -284,5 +463,72 @@ watch([categoryList], () => {
 }
 :deep(.ant-tabs-tab-btn):hover {
   color: rgb(178, 163, 255);
+}
+:deep(.ant-tabs-tab):hover {
+  color: rgb(178, 163, 255);
+}
+
+:deep(.ant-space) {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.no-more {
+  color: #999;
+  text-align: center;
+  padding: 16px 0;
+}
+
+:deep(.preview-modal .ant-modal-content) {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.preview-content {
+  display: flex;
+  gap: 24px;
+}
+
+.preview-image {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-image img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.preview-info {
+  width: 300px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+}
+
+.preview-info h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.info-item {
+  margin-bottom: 16px;
+}
+
+.info-item label {
+  display: block;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.action-buttons {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons .ant-btn {
+  height: 40px;
+  font-size: 16px;
 }
 </style>
