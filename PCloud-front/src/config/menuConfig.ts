@@ -15,7 +15,6 @@ export const menuItems: MenuItem[] = [
     icon: () => h(AppstoreOutlined),
     label: '创建图片',
     title: '创建图片',
-    role: UserRole.ADMIN,
   },
   {
     key: '/admin/userManage',

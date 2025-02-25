@@ -292,6 +292,10 @@ const handleReviewSubmit = async () => {
   }
 }
 
+const handleBatchUpload = () => {
+  router.push('/addPicture/batch')
+}
+
 const FormItem = Form.Item
 
 onMounted(() => {
@@ -330,6 +334,12 @@ onMounted(() => {
               重置
             </Button>
           </Space>
+        </FormItem>
+        <FormItem>
+          <Button type="primary" @click="handleBatchUpload">
+            <template #icon><UploadOutlined /></template>
+            批量上传
+          </Button>
         </FormItem>
       </Form>
     </Card>

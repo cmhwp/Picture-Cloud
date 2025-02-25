@@ -16,6 +16,14 @@ const router = createRouter({
       name: 'addPicture',
       component: () => import('@/views/AddPictureView.vue'),
       meta: {
+        roles: [UserRole.ADMIN, UserRole.USER],
+      },
+    },
+    {
+      path: '/addPicture/batch',
+      name: 'addPictureBatch',
+      component: () => import('@/views/admin/AddPictureBatchView.vue'),
+      meta: {
         roles: [UserRole.ADMIN],
       },
     },
@@ -104,7 +112,7 @@ router.beforeEach(async (to, from, next) => {
     message.warning('请先登录')
     next({
       path: '/user/login',
-      query: { redirect: to.fullPath },
+      query: { redirect: to.fullPath }, // 保存要跳转的地址
     })
     return
   }
@@ -112,7 +120,6 @@ router.beforeEach(async (to, from, next) => {
   // 检查路由是否需要特定角色
   const requiredRoles = to.meta.roles as string[]
   if (requiredRoles && loginUser.userRole) {
-    // 如果用户角色不在允许的角色列表中，拒绝访问
     if (!requiredRoles.includes(loginUser.userRole)) {
       message.error('无权访问该页面')
       next('/')
@@ -120,7 +127,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // 其他情况放行
   next()
 })
 

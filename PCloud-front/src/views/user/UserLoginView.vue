@@ -4,7 +4,7 @@
     <div class="login-box">
       <div class="login-form">
         <h1 class="login-title">登录</h1>
-        <Form :model="formState" @finish="handleFinish" class="form">
+        <Form :model="formState" @finish="handleFinish" @finishFailed="handleFinishFailed" class="form">
           <FormItem name="userAccount" :rules="userAccountRules">
             <Input v-model:value="formState.userAccount" placeholder="用户名">
               <template #prefix>
@@ -42,23 +42,25 @@
 import { reactive, ref } from 'vue'
 import { Form, FormItem, Input, InputPassword, Button, message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined, AntCloudOutlined } from '@ant-design/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { userLoginUsingPost } from '@/api/userController'
 import { userAccountRules, passwordRules } from '@/config/formRules'
 import type { API } from '@/api/typings'
 import { useLoginStore } from '@/stores'
+import type { ValidateErrorEntity } from 'ant-design-vue/es/form/interface'
 
 type FormState = API.UserLoginRequest
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
+const loginStore = useLoginStore()
 
 const formState = reactive<FormState>({
   userAccount: '',
   userPassword: '',
 })
 
-const loginStore = useLoginStore()
 const handleFinish = async (values: FormState) => {
   loading.value = true
   try {
@@ -66,14 +68,14 @@ const handleFinish = async (values: FormState) => {
       userAccount: values.userAccount,
       userPassword: values.userPassword,
     })
+
     if (res.data?.code === 0) {
       await loginStore.setLoginUser()
       message.success('登录成功')
-      router.push({
-        path: '/',
-        replace: true
-      })
-      console.log(router.getRoutes())
+
+      // 获取重定向地址
+      const redirect = route.query.redirect as string
+      router.replace(redirect || '/')
     } else {
       message.error(res.data?.message || '登录失败')
     }
@@ -81,11 +83,17 @@ const handleFinish = async (values: FormState) => {
     if (error instanceof Error) {
       message.error('登录失败，' + error.message)
     } else {
-      message.error('登录失败')
+      message.error('登录失败，请检查网络连接')
     }
   } finally {
     loading.value = false
   }
+}
+
+// 表单验证失败处理
+const handleFinishFailed = (errorInfo: ValidateErrorEntity<FormState>) => {
+  console.log('Failed:', errorInfo)
+  message.error('请检查输入信息是否正确')
 }
 </script>
 

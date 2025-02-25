@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: RequestConfig = {
 const request = axios.create({
   baseURL: 'http://localhost:8080',
   timeout: 60000,
-  withCredentials: true,
+  withCredentials: false,
 })
 
 let loadingCount = 0
@@ -42,12 +42,19 @@ request.interceptors.request.use(
     if (requestConfig.loading) {
       showLoading()
     }
+
+    // 获取token并添加到请求头
+    const token = localStorage.getItem('satoken')
+    if (token) {
+      config.headers['satoken'] = `${token}`  // 直接使用token值
+    }
+
     return config
   },
   (error) => {
     hideLoading()
     return Promise.reject(error)
-  },
+  }
 )
 
 // 响应拦截器
@@ -56,19 +63,24 @@ request.interceptors.response.use(
     const requestConfig = (response.config.requestConfig || DEFAULT_CONFIG) as RequestConfig
     hideLoading()
 
+    // 保存token
+    const token = response.headers['satoken']
+    if (token) {
+      localStorage.setItem('satoken', token)
+      // 立即更新当前请求的header
+      axios.defaults.headers.common['satoken'] = token
+    }
+
     const { data } = response
     const { code, message: msg } = data
 
-    // 处理成功响应
     if (code === 0) {
-      // if (requestConfig.showMessage) {
-      //   message.success(msg)
-      // }
       return response
     }
 
-    // 处理未登录状态
+    // token过期或未登录
     if (code === 40100) {
+      localStorage.removeItem('satoken') // 清除token
       const isLoginRequest = response.config.url?.includes('user/get/login')
       const isLoginPage = window.location.pathname.includes('/user/login')
 
@@ -80,7 +92,6 @@ request.interceptors.response.use(
       return Promise.reject(new Error(msg))
     }
 
-    // 处理其他错误
     if (requestConfig.showMessage) {
       message.error(msg)
     }
@@ -90,7 +101,7 @@ request.interceptors.response.use(
     hideLoading()
     message.error(error.message || '请求失败')
     return Promise.reject(error)
-  },
+  }
 )
 
 export default request

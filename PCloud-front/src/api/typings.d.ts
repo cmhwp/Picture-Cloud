@@ -5,6 +5,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseInt_ = {
+    code?: number
+    data?: number
+    message?: string
+  }
+
   type BaseResponseLoginUserVO_ = {
     code?: number
     data?: LoginUserVO
@@ -104,6 +110,7 @@ declare namespace API {
     createTime?: string
     editTime?: string
     id?: number
+    token?: string
     updateTime?: string
     userAccount?: string
     userAvatar?: string
@@ -209,6 +216,18 @@ declare namespace API {
     tags?: string[]
   }
 
+  type PictureUploadByBatchRequest = {
+    fetchCount?: number
+    prefixName?: string
+    searchText?: string
+  }
+
+  type PictureUploadRequest = {
+    id?: number
+    picName?: string
+    url?: string
+  }
+
   type PictureVO = {
     category?: string
     createTime?: string
@@ -235,6 +254,8 @@ declare namespace API {
 
   type uploadPictureUsingPOSTParams = {
     id?: number
+    picName?: string
+    url?: string
   }
 
   type User = {
@@ -300,4 +321,4 @@ declare namespace API {
     userRole?: string
   }
 }
-export type { API }
+export type {API}

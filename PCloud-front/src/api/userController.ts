@@ -1,6 +1,7 @@
 /* eslint-disable */
 import request from '@/request'
 import type { API } from './typings'
+
 /** addUser POST /api/user/add */
 export async function addUserUsingPost(body: API.UserAddRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong_>('/api/user/add', {

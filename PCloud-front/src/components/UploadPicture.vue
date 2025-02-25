@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { message, Upload, Button, Modal } from 'ant-design-vue'
+import { message, Upload, Button, Modal, Tabs, Input } from 'ant-design-vue'
 import type { UploadChangeParam, UploadProps, UploadFile } from 'ant-design-vue'
 import { InboxOutlined } from '@ant-design/icons-vue'
 import { uploadPictureUsingPost } from '@/api/pictureController'
 import type { API } from '@/api/typings'
+
+const TabPane = Tabs.TabPane
 
 const props = defineProps<{
   picture?: API.PictureVO
@@ -13,6 +15,9 @@ const props = defineProps<{
 
 const fileList = ref<UploadFile[]>([])
 const loading = ref(false)
+const urlLoading = ref(false)
+const activeTab = ref('file')
+const imageUrl = ref('')
 
 const previewVisible = ref(false)
 const previewImage = ref('')
@@ -23,8 +28,19 @@ watch(
   (newVal) => {
     if (!newVal) {
       fileList.value = []
+      imageUrl.value = ''
+    } else {
+      // 当有图片数据时，初始化 fileList
+      fileList.value = [{
+        uid: '-1',
+        name: newVal.name || 'image',
+        status: 'done',
+        url: newVal.url,
+      }]
     }
   },
+  // 添加 immediate: true 使得组件挂载时就执行一次
+  { immediate: true }
 )
 
 const handleChange = async (info: UploadChangeParam) => {
@@ -94,71 +110,167 @@ const handlePreviewImage = (url: string) => {
   previewImage.value = url
   previewVisible.value = true
 }
+
+// URL上传处理
+const handleUrlUpload = async () => {
+  if (!imageUrl.value) {
+    message.error('请输入图片URL')
+    return
+  }
+
+  // if (!isValidImageUrl(imageUrl.value)) {
+  //   message.error('请输入有效的图片URL')
+  //   return
+  // }
+
+  urlLoading.value = true
+  try {
+    // 创建一个Blob对象
+    const response = await fetch(imageUrl.value)
+    const blob = await response.blob()
+    const file = new File([blob], 'image.jpg', { type: blob.type })
+
+    // 使用相同的上传逻辑
+    const params = props.picture ? { id: props.picture.id } : {}
+    const res = await uploadPictureUsingPost(params, {}, file)
+
+    if (res.data?.code === 0 && res.data.data) {
+      props.onSuccess?.(res.data.data)
+      message.success('上传成功')
+      // 更新预览
+      fileList.value = [{
+        uid: '-1',
+        name: 'image.jpg',
+        status: 'done',
+        url: imageUrl.value,
+      }]
+    } else {
+      throw new Error(res.data?.message || '上传失败')
+    }
+  } catch (error) {
+    message.error('上传失败: ' + (error instanceof Error ? error.message : '未知错误'))
+  } finally {
+    urlLoading.value = false
+  }
+}
+
+// 验证图片URL
+const isValidImageUrl = (url: string) => {
+  try {
+    const urlObj = new URL(url)
+    const ext = urlObj.pathname.split('.').pop()?.toLowerCase()
+    const validExts = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    return validExts.includes(ext || '')
+  } catch {
+    return false
+  }
+}
 </script>
 
 <template>
   <div class="upload-container">
-    <div v-if="picture?.url" class="preview-container" @click="handlePreviewImage(picture.url)">
-      <img :src="picture.url" class="preview-image" />
+    <div v-if="!fileList.length" class="upload-options">
+      <Tabs v-model:activeKey="activeTab">
+        <TabPane key="file" tab="本地上传">
+          <Upload
+            v-model:fileList="fileList"
+            :customRequest="customRequest"
+            :beforeUpload="beforeUpload"
+            @change="handleChange"
+            :showUploadList="false"
+          >
+            <div class="upload-area">
+              <p class="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p class="ant-upload-text">点击或拖拽文件到此区域上传</p>
+              <p class="ant-upload-hint">支持单次上传一张图片，文件大小不超过10MB</p>
+            </div>
+          </Upload>
+        </TabPane>
+        <TabPane key="url" tab="URL上传">
+          <div class="url-upload">
+            <Input.TextArea
+              v-model:value="imageUrl"
+              placeholder="请输入图片URL"
+              :rows="3"
+            />
+            <Button
+              type="primary"
+              :loading="urlLoading"
+              @click="handleUrlUpload"
+              style="margin-top: 16px"
+            >
+              上传
+            </Button>
+          </div>
+        </TabPane>
+      </Tabs>
+    </div>
+
+    <div v-else class="preview-container">
+      <div class="preview-wrapper">
+        <img :src="fileList[0]?.url || fileList[0]?.preview" alt="预览图" @click="handlePreview" />
+      </div>
       <div class="preview-actions">
-        <Button type="primary" @click.stop="handleReupload">重新上传</Button>
+        <Button type="primary" @click="handleReupload">重新上传</Button>
       </div>
     </div>
-    <Upload
-      v-else
-      v-model:file-list="fileList"
-      name="file"
-      :show-upload-list="false"
-      :custom-request="customRequest"
-      :before-upload="beforeUpload"
-      @change="handleChange"
-    >
-      <div class="upload-area">
-        <p class="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p class="ant-upload-text">点击或拖拽文件到此区域上传</p>
-        <p class="ant-upload-hint">支持单个图片上传，可点击或拖拽</p>
-      </div>
-    </Upload>
 
-    <Modal v-model:visible="previewVisible" :footer="null" @cancel="handleCancel">
-      <img :src="previewImage" style="width: 100%" />
+    <Modal
+      :visible="previewVisible"
+      :footer="null"
+      @cancel="handleCancel"
+      :width="800"
+    >
+      <img style="width: 100%" :src="previewImage" />
     </Modal>
   </div>
 </template>
 
 <style scoped>
+.upload-container {
+  width: 100%;
+  min-height: 200px;
+}
+
+.upload-options {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.url-upload {
+  padding: 20px;
+  text-align: center;
+}
+
 .preview-container {
-  position: relative;
-  width: 300px;
-  height: 200px;
-  border-radius: 8px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.preview-wrapper {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 16/9;
   overflow: hidden;
+  border-radius: 8px;
   cursor: pointer;
 }
 
-.preview-image {
+.preview-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
 .preview-actions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.preview-container:hover .preview-actions {
-  opacity: 1;
+  gap: 8px;
 }
 
 /* :deep(.ant-upload-list-item-container) {
@@ -182,14 +294,6 @@ const handlePreviewImage = (url: string) => {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.upload-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px; /* 设置一个最小高度 */
-  width: 100%;
 }
 
 .upload-area {
