@@ -46,11 +46,11 @@ knife4j:
 ## 对象存储配置（需要从腾讯云获取）
 cos:
   client:
-    host: https://file.powerdesigner.cn
-    secretId: AKIDPnyvfBUZR5ax9901ua8TaUCg5OVflseH
-    secretKey: VfggaP8g9aIxREt8B0c0A6vXv50iCSTH
-    bucket: picture-1318048461
-    region: ap-guangzhou
+    host:
+    secretId:
+    secretKey:
+    bucket:
+    region:
 # Sa-Token 配置
 sa-token:
   # token名称 (同时也是cookie名称)

@@ -21,6 +21,7 @@ target/
 *.iws
 *.iml
 *.ipr
+application.yml
 
 ### NetBeans ###
 /nbproject/private/

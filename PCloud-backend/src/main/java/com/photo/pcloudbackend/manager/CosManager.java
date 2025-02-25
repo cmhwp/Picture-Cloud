@@ -1,5 +1,6 @@
 package com.photo.pcloudbackend.manager;
 
+import cn.hutool.core.io.FileUtil;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CosManager {
@@ -56,7 +59,16 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 1 表示返回原图信息
         picOperations.setIsPicInfo(1);
+        //图片压缩转为webp
+        List<PicOperations.Rule> picOptions = new ArrayList<>();
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        PicOperations.Rule rule = new PicOperations.Rule();
+        rule.setFileId(webpKey);
+        rule.setBucket(cosClientConfig.getBucket());
+        rule.setRule("imageMogr2/format/webp");
+        picOptions.add(rule);
         // 构造处理参数
+        picOperations.setRules(picOptions);
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
     }

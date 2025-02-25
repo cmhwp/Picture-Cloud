@@ -4,19 +4,31 @@ import cn.hutool.core.util.ObjUtil;
 import lombok.Getter;
 
 /**
- * 用户角色枚举
+ * 图片审核状态
  */
 @Getter
-public enum UserRoleEnum {
+public enum PictureReviewStatusEnum {
 
-    USER("用户", "user"),
-    ADMIN("管理员", "admin");
+    /**
+     * 待审核
+     */
+    PENDING("待审核", 0),
+
+    /**
+     * 通过
+     */
+    APPROVED("通过", 1),
+
+    /**
+     * 拒绝
+     */
+    REJECTED("拒绝", 2);
 
     private final String text;
 
-    private final String value;
+    private final int value;
 
-    UserRoleEnum(String text, String value) {
+    PictureReviewStatusEnum(String text, int value) {
         this.text = text;
         this.value = value;
     }
@@ -27,13 +39,13 @@ public enum UserRoleEnum {
      * @param value 枚举值的 value
      * @return 枚举值
      */
-    public static UserRoleEnum getEnumByValue(String value) {
+    public static PictureReviewStatusEnum getEnumByValue(int value) {
         if (ObjUtil.isEmpty(value)) {
             return null;
         }
-        for (UserRoleEnum userRoleEnum : UserRoleEnum.values()) {
-            if (userRoleEnum.value.equals(value)) {
-                return userRoleEnum;
+        for (PictureReviewStatusEnum pictureReviewStatusEnum : PictureReviewStatusEnum.values()) {
+            if (pictureReviewStatusEnum.value == value) {
+                return pictureReviewStatusEnum;
             }
         }
         return null;

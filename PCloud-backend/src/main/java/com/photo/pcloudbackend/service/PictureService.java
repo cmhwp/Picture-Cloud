@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.photo.pcloudbackend.model.dto.picture.PictureQueryRequest;
+import com.photo.pcloudbackend.model.dto.picture.PictureReviewRequest;
+import com.photo.pcloudbackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.photo.pcloudbackend.model.dto.picture.PictureUploadRequest;
 import com.photo.pcloudbackend.model.entity.Picture;
 import com.photo.pcloudbackend.model.entity.User;
@@ -29,7 +31,7 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile,
+    PictureVO uploadPicture(Object multipartFile,
                             PictureUploadRequest pictureUploadRequest,
                             User loginUser);
 
@@ -58,4 +60,23 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+
+    /**
+     * 图片审核
+     * @param pictureReviewRequest
+     * @param
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 填充审核参数
+     */
+    void fillPictureReview(Picture picture, User loginUser);
+
+    /**
+     * 批量抓取图片
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     */
+    Integer fetchPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 }
