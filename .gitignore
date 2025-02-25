@@ -1,0 +1,2 @@
+# 排除所有位置的 application.yml 文件
+**/application.yml 
